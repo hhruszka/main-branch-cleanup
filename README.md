@@ -1,15 +1,41 @@
-These scripts are used to cleanup main branch in the main branch in a way that only tagged (released) commits will present creating linear history without any garbage.
+These scripts are used to cleanup commits in the main branch in a way that only tagged (released) commits will present creating linear history without any garbage.
 They also create and use a tag history file mapping new commits to original commits for a given tag. This file can be used with `restore-tags.sh` script to restore tags - tag original commits.
-`clean-main.sh` will:
+
+These scripts help to implement the git workflow as depicted below:
+<img width="2816" height="1536" alt="branch-stategy" src="https://github.com/user-attachments/assets/57a8258a-d8d9-4e4f-bd14-a9f02afa32bb" />
+
+which is based on the following branching strategy:
+
+|**Branch Type**|**Name Pattern**|**Purpose**|
+|---|---|---|
+|**Main**|`main`|Production-ready code only. Every commit here is a release.|
+|**Develop**|`develop`|Integration branch for the next release.|
+|**Feature**|`feature/*`|Isolated development for specific tasks.|
+|**Release**|`release/*`|Preparation for a new production release.|
+|**Hotfix**|`hotfix/*`|Critical patches for the current production version.|
+
+Summarizing the gitflow:
+
+1. Work happens in `feature/`.
+2. Features merge into `develop`.
+3. When ready for a version update, `develop` moves to `release/`.
+4. `release/` merges into `main` (Production).
+5. `hotfix/` branches bridge the gap between `main` and `develop` for urgent bugs.
+
+Of course there are other git workflows e.g. github flow, which is simpler. This is just an example.
+
+---
+The `clean-main.sh` script when run will:
 1. create new branch called `main-clean` and 
 2. get the list of tags from git
-3. `git rm -rf . > /dev/null` the working directory
-4. use the tag list to checkout tagged commits one by one using `git checkout <tag> -- .`
-5. get the commit message
+3. cleanup working directory with `git rm -rf . > /dev/null`
+4. get the tag list from git to checkout tagged commits one by one using `git checkout <tag> -- .`
+5. get the original commit message
 6. create a new commit, which message will contain the origin commit message and reference to the original commit hash
 7. diff new commit and the original commit using `git diff HEAD <original commit>` and if they are the same then tag the new commit with the original tag
-8. update the tag history file
+8. update the tag history mapping file
 
+**IMPORTANT!**
 Before running `cleanup-main.sh` make sure to create backup of the main branch and `develop` branch:
 ```
 git checkout main
